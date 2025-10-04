@@ -1,0 +1,8 @@
+numpy
+pandas
+tensorflow>=2.15.0
+scikit-learn
+yfinance
+requests
+tqdm
+matplotlib
