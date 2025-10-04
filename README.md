@@ -137,23 +137,6 @@ Date,LSTM_Prediction,Final_Prediction,Actual_Price
 - **Error Recovery**: Graceful handling of missing data or API failures
 - **Data Validation**: Ensures data quality throughout the pipeline
 
-### Comprehensive Evaluation
-- **Multiple Metrics**: RMSE, MAPE, and Directional Accuracy
-- **Time-based Analysis**: Performance over different time horizons
-- **Visual Comparisons**: Clear charts showing model performance
-
-### Research-Ready
-- **Reproducible Results**: Consistent output formatting
-- **Detailed Logging**: Complete execution traces
-- **Publication Quality**: Professional visualizations and metrics
-
-## 🔬 Research Applications
-
-This codebase is designed for academic research in:
-- **Financial Machine Learning**: Hybrid model architectures
-- **Sentiment Analysis**: News impact on stock prices
-- **Time Series Prediction**: Multi-modal forecasting approaches
-- **Model Evaluation**: Comprehensive performance assessment
 
 ## 📋 Requirements
 
