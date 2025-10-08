@@ -50,7 +50,7 @@ class MetricsCalculator:
             return np.nan
     
     @staticmethod
-    def calculate_directional_accuracy(actual, predicted, threshold_percent=1.0):
+    def calculate_directional_accuracy(actual, predicted, threshold_percent=0.0005):
         """Calculate directional accuracy with threshold"""
         try:
             actual_np = np.array(actual)

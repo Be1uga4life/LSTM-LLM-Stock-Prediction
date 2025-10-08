@@ -29,7 +29,8 @@ except Exception as e:
     print("Using CPU for training")
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 
 class LSTMPredictor:
@@ -56,33 +57,125 @@ class LSTMPredictor:
         return np.array(x), np.array(y)
     
     def build_model(self, input_shape):
-        """Build LSTM model architecture"""
+        """Build LSTM model architecture with regularization as per paper methodology"""
+        from tensorflow.keras.layers import Dropout
+        
+        # Two-layer LSTM with 50 units each (as specified in paper)
+        # Dropout added for overfitting prevention (paper methodology section)
         self.model = Sequential([
             LSTM(units=50, return_sequences=True, input_shape=input_shape),
+            Dropout(0.2),  # Dropout for regularization (paper methodology)
             LSTM(units=50),
+            Dropout(0.2),  # Dropout for regularization (paper methodology)
             Dense(units=1)
         ])
         self.model.compile(optimizer='adam', loss='mean_squared_error')
         return self.model
     
     def train(self, stock_data, epochs=50, batch_size=32):
-        """Train the LSTM model"""
-        print("Training LSTM model...")
+        """Train the LSTM model with overfitting prevention"""
+        print("Training LSTM model with regularization...")
         
         # Prepare data
         close_prices, scaled_data = self.prepare_data(stock_data)
         x_train, y_train = self.create_sequences(scaled_data)
         
-        # Reshape for LSTM
-        x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+        # Temporal split for train/validation (80/20)
+        split_idx = int(0.8 * len(x_train))
+        x_train_split, x_val = x_train[:split_idx], x_train[split_idx:]
+        y_train_split, y_val = y_train[:split_idx], y_train[split_idx:]
         
-        # Build and train model
-        self.build_model((x_train.shape[1], 1))
-        self.model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1)
+        print(f"Training samples: {len(x_train_split)}, Validation samples: {len(x_val)}")
+        
+        # Reshape for LSTM
+        x_train_split = np.reshape(x_train_split, (x_train_split.shape[0], x_train_split.shape[1], 1))
+        x_val = np.reshape(x_val, (x_val.shape[0], x_val.shape[1], 1))
+        
+        # Build model
+        self.build_model((x_train_split.shape[1], 1))
+        
+        # Define callbacks for overfitting prevention
+        from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+        
+        callbacks = [
+            EarlyStopping(
+                monitor='val_loss',
+                patience=10,
+                restore_best_weights=True,
+                verbose=1,
+                mode='min'
+            ),
+            ReduceLROnPlateau(
+                monitor='val_loss',
+                factor=0.5,
+                patience=5,
+                min_lr=0.0001,
+                verbose=1,
+                mode='min'
+            )
+        ]
+        
+        # Train with validation and callbacks
+        print("Training with early stopping and learning rate scheduling...")
+        history = self.model.fit(
+            x_train_split, y_train_split,
+            validation_data=(x_val, y_val),
+            epochs=epochs,
+            batch_size=batch_size,
+            callbacks=callbacks,
+            verbose=1
+        )
         
         self.is_trained = True
-        print("LSTM model training completed")
-        return self.model
+        
+        # Print training summary
+        final_epoch = len(history.history['loss'])
+        final_train_loss = history.history['loss'][-1]
+        final_val_loss = history.history['val_loss'][-1]
+        
+        print(f"Training completed after {final_epoch} epochs")
+        print(f"Final training loss: {final_train_loss:.6f}")
+        print(f"Final validation loss: {final_val_loss:.6f}")
+        print(f"Overfitting gap: {((final_val_loss - final_train_loss) / final_train_loss * 100):.1f}%")
+        
+        return history
+    
+    def plot_training_history(self, history, save_path=None):
+        """Plot training history to visualize overfitting prevention"""
+        import matplotlib.pyplot as plt
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+        
+        # Plot training & validation loss
+        ax1.plot(history.history['loss'], label='Training Loss', color='blue')
+        ax1.plot(history.history['val_loss'], label='Validation Loss', color='red')
+        ax1.set_title('Model Loss During Training')
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # Plot learning rate if available
+        if 'lr' in history.history:
+            ax2.plot(history.history['lr'], label='Learning Rate', color='green')
+            ax2.set_title('Learning Rate Schedule')
+            ax2.set_xlabel('Epoch')
+            ax2.set_ylabel('Learning Rate')
+            ax2.set_yscale('log')
+            ax2.legend()
+            ax2.grid(True, alpha=0.3)
+        else:
+            ax2.text(0.5, 0.5, 'Learning Rate\nHistory Not Available', 
+                    ha='center', va='center', transform=ax2.transAxes)
+            ax2.set_title('Learning Rate Schedule')
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Training history plot saved to: {save_path}")
+        
+        return fig
     
     def predict_next(self, last_sequence):
         """Predict next price given a sequence"""

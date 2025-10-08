@@ -19,7 +19,7 @@ class NewsDownloader:
             }
         }
     
-    def download_alphavantage_news(self, symbol, days_back=60):
+    def download_alphavantage_news(self, symbol, days_back=91):
         """Download news from Alpha Vantage"""
         print(f"📰 Downloading news for {symbol} from Alpha Vantage...")
         
@@ -83,7 +83,7 @@ class NewsDownloader:
             print(f"❌ API error: {e}")
             return None
     
-    def create_sample_news(self, symbol, days_back=60):
+    def create_sample_news(self, symbol, days_back=91):
         """Create sample news data for testing"""
         print(f"📝 Creating sample news data for {symbol}...")
         
@@ -143,7 +143,7 @@ class NewsDownloader:
         print(f"✅ Created {len(sample_news)} sample news items")
         return sample_news
     
-    def download_news(self, symbol, days_back=60, use_sample_fallback=True):
+    def download_news(self, symbol, days_back=91, use_sample_fallback=True):
         """Download news with fallback options"""
         print(f"🔍 Downloading news for {symbol} (last {days_back} days)...")
         
@@ -182,7 +182,7 @@ def main():
     
     parser = argparse.ArgumentParser(description='Download news data for stock prediction')
     parser.add_argument('symbol', help='Stock symbol (e.g., TSLA, MSFT)')
-    parser.add_argument('--days', type=int, default=60, help='Days of news to download')
+    parser.add_argument('--days', type=int, default=91, help='Days of news to download (13 weeks = 91 days)')
     parser.add_argument('--output-dir', default='news', help='Output directory')
     parser.add_argument('--no-fallback', action='store_true', help='Disable sample data fallback')
     

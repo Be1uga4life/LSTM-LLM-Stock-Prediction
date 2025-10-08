@@ -1,6 +1,20 @@
-# Stock Price Prediction with LSTM and LLM Enhancement
+# A Novel LLM-LSTM Integration Framework for Stock Price Prediction
 
-A research project that combines Long Short-Term Memory (LSTM) neural networks with Large Language Model (LLM) enhancement for improved stock price prediction accuracy. The system uses historical stock data for LSTM training and incorporates news sentiment analysis through LLM to adjust predictions.
+**Research Implementation** - This repository contains the complete implementation for the research paper "A Novel LLM-LSTM Integration Framework for Stock Price Prediction" by Eric Yu and Tony Du.
+
+## 📄 Paper Abstract
+
+This research introduces an integration of Long Short-Term Memory (LSTM) and Large Language Model (LLM) that leverages quantitative price patterns and qualitative market sentiment for enhanced stock prediction. The framework generates base forecasts through LSTM analysis of historical price sequences, followed by LLM-based sentiment adjustments derived from financial news.
+
+## 🎯 Research Methodology
+
+The implementation follows the exact methodology described in the paper:
+- **Two-layer LSTM** with 50 units per layer
+- **60-day time sequences** for temporal modeling  
+- **LLaMA 3 integration** via Ollama for sentiment analysis
+- **±5% adjustment constraints** to prevent sentiment dominance
+- **21-day evaluation period** (weekdays only)
+- **13-week news collection** prior to prediction start
 
 ## 🏗️ Project Structure
 

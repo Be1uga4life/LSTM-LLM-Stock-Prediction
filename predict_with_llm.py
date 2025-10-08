@@ -100,12 +100,13 @@ def main():
     print("🚀 LSTM + LLM Enhanced Stock Prediction with Accuracy Testing")
     print("=" * 70)
     
-    # Configuration
+    # Configuration (aligned with paper methodology)
     symbol = "TSLA"
     stock_file = "TSLA_historical.csv"
     news_file = f"news/{symbol}_news_latest.json"
-    actual_data_file = "TSLA_historical.csv"  # Same file but we'll use future dates
-    days_to_predict = 30
+    actual_data_file = "TSLA_historical.csv"
+    days_to_predict = 21  # 21 weekdays as mentioned in paper
+    news_collection_weeks = 13  # Exactly 13 weeks as stated in paper
     
     # Check files exist
     if not os.path.exists(stock_file):
@@ -118,7 +119,7 @@ def main():
         try:
             from download_news import NewsDownloader
             downloader = NewsDownloader()
-            news_data_raw = downloader.download_news(symbol, days_back=90)
+            news_data_raw = downloader.download_news(symbol, days_back=news_collection_weeks*7)
             if news_data_raw:
                 news_file = downloader.save_news(news_data_raw, symbol)
                 print(f"✅ News downloaded and saved to: {news_file}")
@@ -142,7 +143,7 @@ def main():
     news_data = data_handler.load_news_data(news_file, symbol)
     
     # Split data for training (use data up to a certain point for realistic testing)
-    # Use data up to 30 days before the end for training, test on last 30 days
+    # Use data up to 21 weekdays before the end for training, test on last 21 weekdays
     split_date = stock_data.index[-days_to_predict]
     training_data = stock_data[stock_data.index < split_date]
     
@@ -151,11 +152,17 @@ def main():
     
     # Step 1: Train LSTM Model
     print("\n🧠 Step 1: Training LSTM Model (CPU-only)...")
-    lstm_predictor = LSTMPredictor(time_steps=60)
+    lstm_predictor = LSTMPredictor(time_steps=60)  # 60-day sequences as per methodology
     
     try:
-        lstm_predictor.train(training_data, epochs=30, batch_size=32)
+        history = lstm_predictor.train(training_data, epochs=50, batch_size=32)  # 50 epochs as specified in paper
         print("✅ LSTM training completed")
+        
+        # Save training history plot
+        os.makedirs('output', exist_ok=True)
+        history_plot_path = f'output/{symbol}_training_history.png'
+        lstm_predictor.plot_training_history(history, history_plot_path)
+        
     except Exception as e:
         print(f"❌ LSTM training failed: {e}")
         return 1
@@ -295,6 +302,7 @@ def main():
     print(f"Predictions: {days_to_predict} days")
     print(f"Results: {results_file}")
     print(f"Visualization: {plot_file}")
+    print(f"Training History: {history_plot_path}")
     print(f"Adjustments Log: {log_file}")
     
     return 0
